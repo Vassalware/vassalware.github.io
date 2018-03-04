@@ -1,6 +1,6 @@
 ---
 title: "Running C# in an in-game Developer Console with Roslyn"
-date: 2018-03-03
+date: 2018-03-04
 tags: ["C#", "game-dev", "roslyn", "scripting"]
 draft: false
 ---
@@ -30,7 +30,7 @@ You've probably seen plenty of developer consoles in games, usually designed to 
 
 These are pretty simple to implement: split the input line along the ```' '``` character, and search a ```Dictionary<string, IConsoleCommand>``` using your first element in your array of splits. The rest of those elements are your command's parameters. If your command has some way of defining what types it expects its parameters as, you can even parse the strings into those types before sending them to the command! 
 
-It's a simple implementation, but a robust one. It's easy to add a command: you create a class that implements a ```IConsoleCommand``` for it's name, what parameters it expects, and an ```Execute```method, and all your operations and logic go inside of that method. Then you just add an instance to the dictionary.
+It's a simple implementation, but a robust one. It's easy to add a command: you create a class that implements an ```IConsoleCommand``` interface that defines a Name, its parameters, and an ```Execute``` method, and all your operations and logic go inside of that method. Then you just add an instance to the dictionary.
 
 But what if we could write operations and logic _directly into the console itself?_
 
@@ -38,7 +38,7 @@ But what if we could write operations and logic _directly into the console itsel
 
 ## Expressions
 
-I was initially looking for a way to execute commands that could resolve expressions in their parameters. I wanted to be able to write ```SpawnEnemy Zombie (20 * 10) (20 * (5 + 5)) 4```. I thought _"Okay, maybe I can use [Eto.Parse](https://github.com/picoe/Eto.Parse), write a simple grammar to give me a syntax tree that I can use to resolve the expression. But if I'm writing a grammar, I could change up the syntax. Maybe something like a method call..."_
+I was initially looking for a way to execute commands that could resolve expressions in their parameters. I wanted to be able to write ```SpawnEnemy Zombie (20 * 10) (20 * (5 + 5)) 4```. I thought _"Okay, maybe I can use [**Eto.Parse**](https://github.com/picoe/Eto.Parse), write a simple grammar to give me a syntax tree that I can use to resolve the expression. But if I'm writing a grammar, I could change up the syntax. Maybe something like a method call..."_
 
 I slowly realized that my ideal format for writing commands in an in-game console was **still C#**. Luckily, this is possible with Roslyn. Better yet, it's even more simple than the aforementioned console implementation. 
 
@@ -76,13 +76,13 @@ Thankfully, there's an easy fix. We can just load the assemblies on another thre
 
 ```
 Task.Run(() => {
-	CSharpScript.Create("System.Console.WriteLine();").CreateDelegate();
+    CSharpScript.Create("System.Console.WriteLine();").CreateDelegate();
 });
 ```
 
 <br/>
 
-## Hooking it up to an in-game Console
+## References and Globals
 
 Now that we know how to turn a string into an executable C# delegate, we can look at one of the other overloads for ```CSharpScript.Create()```:
 
@@ -98,8 +98,8 @@ We know what the ```code``` parameter is, so let's look at the others.
 
 ```
 var scriptOptions = ScriptOptions.Default
-	.WithReferences(typeof(RuntimeBinderException).Assembly)
-	.WithImports("System");
+    .WithReferences(typeof(RuntimeBinderException).Assembly)
+    .WithImports("System");
 ```
 
 Here we're creating a ScriptOptions object that is a modified version of ```ScriptOptions.Default```. We modify it to add a reference to the assembly that contains the ```RuntimeBinderException``` type (Microsoft.CSharp) so that we can use ```dynamic``` objects in our scripts (more on this later). We also import the "System" namespace so that we can simply write ```Console.WriteLine``` in our in-game console.
@@ -111,7 +111,7 @@ The ```globalsType``` is a type that we'll be creating. It's members will be glo
 ```
 public class ConsoleGlobals
 {
-	public int Foo = 100;
+    public int Foo = 100;
 }
 ```
 
@@ -119,10 +119,10 @@ Let's create a script that uses this type, along with the ScriptOptions that we 
 
 ```
 var script = CSharpScript.Create(
-	code: "Console.WriteLine(Foo);",
-	options: scriptOptions,
-	globalsType: typeof(ConsoleGlobals))
-		.CreateDelegate();
+    code: "Console.WriteLine(Foo);",
+    options: scriptOptions,
+    globalsType: typeof(ConsoleGlobals))
+        .CreateDelegate();
 ```
 
 To use our globals, we're going to need to pass in an object of that type to the ```Invoke()``` method on the delegate:
@@ -140,6 +140,185 @@ script.Invoke(globals);
 Console.WriteLine(globals.Foo); // Output: 200
 ```
 
+As you can see, this can be a pretty powerful tool for changing variables on-the-fly.
+
+<br />
+
+## Hooking it up to an in-game Console
+
+To hook this up to a developer console in-game, we need to parse the input string as a script whenever we submit it. For this I have a ```CommandProcessor``` class that looks something like this:
+
+```
+public class CommandProcessor
+{
+	public DebugConsole DebugConsole { get; }
+
+	public CommandProcessor(DebugConsole debugConsole)
+	{
+		DebugConsole = debugConsole;
+	}
+
+	public void ParseInput(string input)
+	{
+		DebugConsole.Write($">{input}\n", Color.LightGreen, userInput: true);
+
+		// Here is where we'll run our input as a script.
+	}
+}
+```
+
+The ```CommandProcessor``` has a reference to the ```DebugConsole``` that created it. Whenever we get input to parse (which will be called from the ```DebugConsole```), we'll output it back to the console in a light green color before processing them. The 'userInput' bool is used to tell when a line written to the console was user input or not (so that the 'up' arrow can traverse previous lines of input.)
+
+At this point, we could just put a call to CSharpScript.Create() with our input string as the code, whatever references and imports we want, and a globals type, but we'd like to create the script and delegate on a separate thread so that it doesn't block the responsiveness of our game. We'll still be outputting our input string in light green immediately, which will almost entirely mitigate any feeling of 'slowness' due to waiting for the script to compile. so I have a ```ScriptCompilationResult``` class that our ```Task``` will return:
+
+```
+public class ScriptCompilationResult
+{
+    public bool Success { get; }
+    public CompilationErrorException Exception { get; }
+    public ScriptRunner<object> Script { get; }
+
+    public ScriptCompilationResult(ScriptRunner<object> script)
+    {
+        Success = true;
+        Exception = null;
+        Script = script;
+    }
+
+    public ScriptCompilationResult(CompilationErrorException exception)
+    {
+        Success = false;
+        Exception = exception;
+        Script = null;
+    }
+}
+```
+
+Then, we'll store a ```Task<ScriptCompilationResult>``` private field in our ```CommandProcessor``` class, and use it in our ```ParseInput()``` method.
+
+```
+public void ParseInput(string input)
+{
+    DebugConsole.Write($">{input}\n", Color.LightGreen, userInput: true);
+
+    if (_compilationResult != null)
+	{
+		// We'll make this method in a moment.
+		_compilationResult = CompileScript(input);
+	}
+	else
+	{
+		DebugConsole.Write("Error: Compilation in progress.\n", Color.Red);
+	}
+}
+```
+
+If our result already exists (which can only mean that we tried to enter another command while one was still compiling), we'll write an error to the console saying that the compilation is already in progress. A queue would be more robust, but I want to _notice_ if any commands are so slow to compile that I was able to write a second one before the first one finished compiling. Now let's look at the ```CompileScript()``` method:
+
+_(Note that_ ```ManaGame``` _is not a typo, as it's the name of my engine's_ ```Game``` _subclass.)_
+
+```
+private Task<ScriptCompilationResult> CompileScript(string code)
+{
+    return Task.Run(() =>
+    {
+        try
+        {
+            var script = CSharpScript.Create(
+                code: code,
+                options: ScriptOptions.Default
+                    .WithReferences(
+                        typeof(Game).Assembly,					  // MonoGame Assembly
+                        typeof(ManaGame).Assembly,				  // My Assembly
+                        typeof(RuntimeBinderException).Assembly)  // Required for 'dynamic'
+                    .WithImports(
+                        "System",
+                        "Microsoft.Xna.Framework"),
+                globalsType: typeof(ManaGlobals))
+                    .CreateDelegate();
+
+            return new ScriptCompilationResult(script);
+        }
+        catch (CompilationErrorException e)
+        {
+            return new ScriptCompilationResult(e);
+        }
+    });
+}
+```
+
+We create and start the task at the same time. Within it, we create the script and delegate in a try-catch block. If it succeeds, we return a new ```ScriptCompilationResult``` with the delegate passed to its constructor. If we got a ```CompilationErrorException```, we pass the exception in instead.
+
+Now, we'll check to see if the task is done in an ```Update()``` method on our ```CommandProcessor``` class:
+
+```
+public void Update()
+{
+	if (_compilationResult == null) return;
+
+	if (_compilationResult.IsCompleted)
+	{
+		var scriptResult = _compilationResult.Result;
+		
+		if (scriptResult.Success)
+		{
+			scriptResult.Script.Invoke(ManaGlobals.Instance);
+		}
+		else
+		{
+			DebugConsole.Write($"Error: {scriptResult.Exception.Message}\n", Color.Red);
+		}
+
+		_compilationResult = null;
+	}
+}
+
+```
+
+We exit early if the ```Task``` doesn't exist. If it does, we check if it's completed. If it is, we grab the result, and either invoke the script on our update thread or write the error to the DebugConsole, then set ```_compilationResult``` to null so that we can send more commands. I'm using a singleton for my globals object, so I pass ```ManaGlobals.Instance``` into the delegate invocation. 
+
+Here's my globals class:
+
+```
+public class ManaGlobals
+{
+	public static ManaGlobals Instance => _instance ?? (_instance = new ManaGlobals());
+	private static ManaGlobals _instance;
+
+	public dynamic Variables { get; } = new ExpandoObject();
+}
+```
+
+I use an ```ExpandoObject``` for a field called 'Variables'. ```ExpandoObject``` is an object that can have members dynamically added at runtime. This means that we can write something like:
+
+```
+Variables.SomeText = "Hello, World!";
+```
+
+and then, on a subsequent call, use the variable:
+
+```
+Console.WriteLine(Variables.SomeText); // Output: Hello, World!
+```
+
+You can set initial values for members of this ```Variables``` object anywhere in your code. If you're tweaking parameters for your player's jump mechanics, you can initialize some values on ```Variables``` when your player is first created, and then reference them in your jump code. Then you're free to change the values in your console and watch the changes get reflected instantly.
+
 <br/>
 
-[Unfinished Draft]
+## Conclusion
+
+Thanks for making it this far! This is my first post, so there's a slight change that I've explained too much of what's obvious and not enough of what isn't. Feel free to comment down below or email me if you have any feedback.
+
+Here's that gif from the top again:
+
+![Example image](/images/console_anim.gif#center-border)
+
+Final notes:
+
+* In this gif, I had a ```Color``` field on my global type called ```BackgroundColor```. This was before I thought of using an ```ExpandoObject``` instead.
+
+* I also have a custom ```TextWriter``` set for ```System.Console``` so that calling ```Console.WriteLine``` writes to my in-game developer console.
+
+* Check out the [**Roslyn Scripting API samples**](https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples) on github. These can teach you how to expand our implementation to write the return type of your script to the console (like a REPL), or be able to declare variables in your console e.g. ```var myInt = 10;``` and retain them in subsequent calls.
+
+* The font I'm using is called [**Nintendo DS BIOS**](https://www.dafont.com/nintendo-ds-bios.font). It's free for personal use.
