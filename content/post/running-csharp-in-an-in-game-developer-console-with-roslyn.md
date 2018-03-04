@@ -18,7 +18,7 @@ Fast-forward along in development and you may have dozens of these utility funct
 
 ## Developer Console
 
-You've probably seen plenty of developer consoles in games. These are usually designed to mimic desktop command-line interfaces. You invoke commands by writing the name of the command, followed by any parameters it may take, separated by spaces.
+You've probably seen plenty of developer consoles in games, usually designed to mimic standard command-line interfaces. You execute commands by writing the name of the command, followed by any parameters it may take, separated by spaces.
 
 ```
 // Spawn a level 4 Zombie at (200, 200)
@@ -28,9 +28,11 @@ You've probably seen plenty of developer consoles in games. These are usually de
 > SpawnEnemyAtMouse Zombie 4
 ``` 
 
-These are pretty simple to implement: split the input line along the ```' '``` character, and search your ```Dictionary<string, IConsoleCommand>``` using your first element in your array of splits. The rest of those elements are your command's parameters. If your command has some way of defining what types it expects its parameters as, you can even parse the strings into those types before sending them to the command! 
+These are pretty simple to implement: split the input line along the ```' '``` character, and search a ```Dictionary<string, IConsoleCommand>``` using your first element in your array of splits. The rest of those elements are your command's parameters. If your command has some way of defining what types it expects its parameters as, you can even parse the strings into those types before sending them to the command! 
 
-This is a pretty simple but robust method. You create a class that implements ```IConsoleCommand```, write its name and what parameters it expects, and write your operations and logic inside of an ```Execute``` method. But what if we could write operations and logic _directly into the console itself?_
+It's a simple implementation, but a robust one. It's easy to add a command: you create a class that implements a ```IConsoleCommand``` for it's name, what parameters it expects, and an ```Execute```method, and all your operations and logic go inside of that method. Then you just add an instance to the dictionary.
+
+But what if we could write operations and logic _directly into the console itself?_
 
 <br/>
 
