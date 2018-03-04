@@ -98,3 +98,10 @@ footer {
 img {
     max-width: 100%;
 }
+
+img[src$='#center-border']
+{
+    display: block;
+    margin: 0.7rem auto;
+    border: 1px solid black;
+}
