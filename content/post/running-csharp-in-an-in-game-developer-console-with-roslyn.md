@@ -10,7 +10,7 @@ draft: false
 
 ## Introduction
 
-When testing things during game development, it's common to write temporary code that executes on a button press. (e.g., _"When I press F1, call ```SpawnEnemy(Input.MousePosition);```."_) This can be difficult to parameterize, however. If your ```SpawnEnemy``` method takes in more than just a location, such as an enum for your enemy type or an int for its level, you'll need to either change the hard-coded values in the method call (hopefully with [edit-and-continue](https://www.youtube.com/watch?v=mfJEug3Y8ss)) or pass in variables and create a UI to change them at runtime. 
+When testing things during game development, it's common to write temporary code that executes on a button press. (e.g., _"When I press F1, call ```SpawnEnemy(Input.MousePosition);```."_) This can be difficult to parameterize, however. If your ```SpawnEnemy``` method takes in more than just a location, such as an enum for your enemy type or an int for its level, you'll need to either change the hard-coded values in the method call (hopefully with [**edit-and-continue**](https://www.youtube.com/watch?v=mfJEug3Y8ss)) or pass in variables and create a UI to change them at runtime. 
 
 Fast-forward along in development and you may have dozens of these utility functions to manipulate your levels or game objects to test things out, and it can become increasingly inconvenient to maintain a way of calling them all at runtime from different key-presses.
 
@@ -24,11 +24,13 @@ You've probably seen plenty of developer consoles in games, usually designed to 
 // Spawn a level 4 Zombie at (200, 200)
 > SpawnEnemy Zombie 200 200 4
 
-// or spawn a level 4 Zombie at my mouse
+// or spawn a level 4 Zombie at the mouse position
 > SpawnEnemyAtMouse Zombie 4
 ``` 
 
 These are pretty simple to implement: split the input line along the ```' '``` character, and search a ```Dictionary<string, IConsoleCommand>``` using your first element in your array of splits. The rest of those elements are your command's parameters. If your command has some way of defining what types it expects its parameters as, you can even parse the strings into those types before sending them to the command! 
+
+###### _There's a good implementation of this type of console [**here**](https://github.com/ellisonch/monogameconsole/blob/master/MonoGameConsole/IConsoleCommand.cs), but it seems to leave the parameter string parsing up to the individual commands._
 
 It's a simple implementation, but a robust one. It's easy to add a command: you create a class that implements an ```IConsoleCommand``` interface that defines a Name, its parameters, and an ```Execute``` method, and all your operations and logic go inside of that method. Then you just add an instance to the dictionary.
 
@@ -44,7 +46,7 @@ I slowly realized that my ideal format for writing commands in an in-game consol
 
 <br/>
 
-## Enter: Roslyn
+## Roslyn
 
 Roslyn's scripting APIs let us execute arbitrary C# code as a 'script'. This means that, like typical scripting languages, we can execute C# statements without having to place them inside of a method. We can feed C# code from our console into the API and execute it relatively quickly.
 
@@ -320,5 +322,7 @@ Final notes:
 * I also have a custom ```TextWriter``` set for ```System.Console``` so that calling ```Console.WriteLine``` writes to my in-game developer console.
 
 * Check out the [**Roslyn Scripting API samples**](https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples) on github. These can teach you how to expand our implementation to write the return type of your script to the console (like a REPL), or be able to declare variables in your console e.g. ```var myInt = 10;``` and retain them in subsequent calls.
+
+* The Scripting API does add quite a few dependencies to your project. If you're only using the console as a dev-tool and don't plan on shipping it with your game, you'll want to only reference the dependencies in the ```DEBUG``` configuration, and use ```#if DEBUG``` when you use them.
 
 * The font I'm using is called [**Nintendo DS BIOS**](https://www.dafont.com/nintendo-ds-bios.font). It's free for personal use.
