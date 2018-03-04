@@ -8,9 +8,6 @@ draft: false
 
 ![Example image](/images/console_anim.gif#center-border)
 
-<br/>
-Supercharge your in-game developer console with C# scripting! Using the Roslyn Scripting API, we'll turn a string of C# code into an invocable delegate in just one line. Then, we'll go further and compile our C# commands asynchronously, then invoke them on the update thread.
-
 ## Introduction
 
 When testing things during game development, it's common to write temporary code that executes on a button press. (e.g., _"When I press F1, call ```SpawnEnemy(Input.MousePosition);```."_) This can be difficult to parameterize, however. If your ```SpawnEnemy``` method takes in more than just a location, such as an enum for your enemy type or an int for its level, you'll need to either change the hard-coded values in the method call (hopefully with [**edit-and-continue**](https://www.youtube.com/watch?v=mfJEug3Y8ss)) or pass in variables and create a UI to change them at runtime. 

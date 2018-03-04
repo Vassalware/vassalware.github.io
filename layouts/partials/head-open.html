@@ -1,9 +1,15 @@
 {{ if .Title }}
 <meta name="title" content="{{ .Title }}">
+<meta property="og:title" content="{{ .Title }}" />
 {{ end }}
+
+<meta property="og:type" content="article" />
+<meta property="og:url" content="{{ .Permalink }}" />
+<meta property="og:image" content="http://ia.media-imdb.com/images/rock.jpg" />
 
 {{ if .Description }}
 <meta name="description" content="{{ .Description }}">
+<meta property="og:description" content="{{ .Description }}">
 {{ end }}
 
 <meta name="author" content="Vassalware">
