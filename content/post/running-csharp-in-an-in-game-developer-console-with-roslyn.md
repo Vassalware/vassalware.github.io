@@ -36,9 +36,9 @@ This is a pretty simple but robust method. You create a class that implements ``
 
 ## Expressions
 
-I was initially looking for a way to execute commands that could resolve expressions in their parameters. I wanted to be able to write ```SpawnEnemy Zombie (20 * 10) (20 * (5 + 5)) 4```. I thought _"Okay, I can use [Eto.Parse](https://github.com/picoe/Eto.Parse), write a simple grammar to give me a syntax tree that I can use to resolve the expression. But if I'm writing a grammar, I could change up the syntax. Maybe something like a method call..."_
+I was initially looking for a way to execute commands that could resolve expressions in their parameters. I wanted to be able to write ```SpawnEnemy Zombie (20 * 10) (20 * (5 + 5)) 4```. I thought _"Okay, maybe I can use [Eto.Parse](https://github.com/picoe/Eto.Parse), write a simple grammar to give me a syntax tree that I can use to resolve the expression. But if I'm writing a grammar, I could change up the syntax. Maybe something like a method call..."_
 
-I slowly realized that my ideal format for writing commands in a runtime console was **still C#**. Better yet, it's even more simple than the aforementioned console implementation. 
+I slowly realized that my ideal format for writing commands in an in-game console was **still C#**. Luckily, this is possible with Roslyn. Better yet, it's even more simple than the aforementioned console implementation. 
 
 <br/>
 
