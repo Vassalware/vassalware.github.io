@@ -2,9 +2,12 @@
 title: "Running C# in an in-game Developer Console with Roslyn"
 description: "Supercharge your in-game developer console with C# scripting! Using the Roslyn Scripting API, we'll turn a string of C# code into an invocable delegate in just one line. Then, we'll go further and compile our C# commands asynchronously, then invoke them on the update thread."
 date: 2018-03-04
+image: images/console_anim.gif
 tags: ["C#", "game-dev", "roslyn", "scripting"]
 draft: false
 ---
+
+
 
 ![Example image](/images/console_anim.gif#center-border)
 
