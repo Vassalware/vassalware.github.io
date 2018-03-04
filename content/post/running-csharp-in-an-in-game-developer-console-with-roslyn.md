@@ -126,8 +126,7 @@ var script = CSharpScript.Create(
 To use our globals, we're going to need to pass in an object of that type to the ```Invoke()``` method on the delegate:
 
 ```
-script.Invoke(new ConsoleGlobals());
-// Output: 100
+script.Invoke(new ConsoleGlobals()); // Output: 100
 ```
 
 And it works! And since we're passing in a reference to an object of our globalType, it can be modified by our script as well. If we change our code to ```Foo = 200;```, we can see this:
