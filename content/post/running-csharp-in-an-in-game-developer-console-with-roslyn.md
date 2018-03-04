@@ -48,7 +48,7 @@ I slowly realized that my ideal format for writing commands in an in-game consol
 
 ## Roslyn
 
-Roslyn's scripting APIs let us execute arbitrary C# code as a 'script'. This means that, like typical scripting languages, we can execute C# statements without having to place them inside of a method. We can feed C# code from our console into the API and execute it relatively quickly.
+Roslyn's scripting APIs let us execute arbitrary C# code as a 'script'. This means that, like typical scripting languages, we can execute statements without having to place them inside of a method. We can feed C# code from our console into the API and execute it relatively quickly.
 
 To start off, install the scripting API assembly from NuGet:
 
@@ -309,7 +309,7 @@ You can set initial values for members of this ```Variables``` object anywhere i
 
 ## Conclusion
 
-Thanks for making it this far! This is my first post, so there's a slight change that I've explained too much of what's obvious and not enough of what isn't. Feel free to comment down below or email me if you have any feedback.
+Thanks for making it this far! This is my first post, so there's a decent change that I've explained too much of what's obvious and not enough of what isn't. Feel free to comment down below or email me if you have any feedback.
 
 Here's that gif from the top again:
 
