@@ -74,7 +74,7 @@ The ```Create()``` call returns a ```Script<object>``` object. We'll be using an
 
 At this point, if you've tried the code yourself, you may have noticed that it's pretty slow (around 1500 ms on my system). This is because .NET assemblies are lazily loaded, so we're loading _quite a few_ assemblies the first time we call this code. When placed at the start of a fresh console application, this code loads **28** assemblies! While subsequent calls are much faster (around 120 ms on my system), we still don't want our game to lock up for 1500 ms the first time we send a command. Even if we compile the script asynchronously (which we should) so that it doesn't block our game thread, we would still be waiting 1500 ms for our command to be invoked, so this is problematic for us.
 
-Thankfully, there's an easy fix. We can just load the assemblies on another thread while our game is still loading. If it takes 1500 ms to load the assemblies we need, and our game already takes 2000 ms to load, then it's highly likely that they'll be finished loading by the time our game finishes loading. Here's the code I use for this:
+Thankfully, there's an easy fix. We can just load the assemblies on another thread while our game is still loading. If it takes 1500 ms to load the assemblies we need, and our game already takes 2000 ms to load, then it's highly likely that they'll be finished loading by the time our game finishes loading. We won't need to invoke the script, just create it and grab its delegate on another thread. Here's the code I use for this:
 
 ```
 Task.Run(() => {
@@ -108,7 +108,7 @@ Here we're creating a ScriptOptions object that is a modified version of ```Scri
 
 ### GlobalsType
 
-The ```globalsType``` is a type that we'll be creating. It's members will be globals that we can access from our script easily. Let's make a simple one for now.
+The ```globalsType``` is a type that we'll be creating. It's members will be globals that we can access directly from our script. Let's make a simple one for now.
 
 ```
 public class ConsoleGlobals
@@ -117,7 +117,7 @@ public class ConsoleGlobals
 }
 ```
 
-Let's create a script that uses this type, along with the ScriptOptions that we created earlier:
+Let's create a script that uses this type, passing in the ScriptOptions that we created earlier:
 
 ```
 var script = CSharpScript.Create(
@@ -162,16 +162,16 @@ public class CommandProcessor
 
 	public void ParseInput(string input)
 	{
-		DebugConsole.Write($">{input}\n", Color.LightGreen, userInput: true);
+		DebugConsole.Write($">{input}\n", textColor: Color.LightGreen, userInput: true);
 
 		// Here is where we'll run our input as a script.
 	}
 }
 ```
 
-The ```CommandProcessor``` has a reference to the ```DebugConsole``` that created it. Whenever we get input to parse (which will be called from the ```DebugConsole```), we'll output it back to the console in a light green color before processing them. The 'userInput' bool is used to tell when a line written to the console was user input or not (so that the 'up' arrow can traverse previous lines of input.)
+The ```CommandProcessor``` has a reference to the ```DebugConsole``` that created it. ```DebugConsole``` is the class that my in-game developer console is implemented in. Whenever we get input to parse (```DebugConsole``` calling our ```ParseInput``` method when we press 'enter'), we'll output it back to the console in a light green color before processing it. The 'userInput' bool is used to tell when a line written to the console was user input or not (so that the 'up' arrow can traverse previous lines of input.) How ```DebugConsole``` is implemented is unimportant; we're just focusing on processing console commands given to us by it.
 
-At this point, we could just put a call to CSharpScript.Create() with our input string as the code, whatever references and imports we want, and a globals type, but we'd like to create the script and delegate on a separate thread so that it doesn't block the responsiveness of our game. We'll still be outputting our input string in light green immediately, which will almost entirely mitigate any feeling of 'slowness' due to waiting for the script to compile. so I have a ```ScriptCompilationResult``` class that our ```Task``` will return:
+At this point, we could just put a call to ```CSharpScript.Create()``` with our input string as the code, whatever references and imports we want, and a globals type, but we'd like to create the script and delegate on a separate thread so that it doesn't block our update thread. We'll still be outputting our input string in light green immediately, which will help the console feel responsive despite some commands taking ~200 ms to compile and execute. We'll create a ```ScriptCompilationResult``` class that our ```Task``` will return:
 
 ```
 public class ScriptCompilationResult
@@ -196,7 +196,7 @@ public class ScriptCompilationResult
 }
 ```
 
-Then, we'll store a ```Task<ScriptCompilationResult>``` private field in our ```CommandProcessor``` class, and use it in our ```ParseInput()``` method.
+Then, we'll store a ```Task<ScriptCompilationResult>``` private field called ```_compilationResult``` in our ```CommandProcessor``` class, and use it in our ```ParseInput()``` method.
 
 ```
 public void ParseInput(string input)
@@ -217,7 +217,7 @@ public void ParseInput(string input)
 
 If our result already exists (which can only mean that we tried to enter another command while one was still compiling), we'll write an error to the console saying that the compilation is already in progress. A queue would be more robust, but I want to _notice_ if any commands are so slow to compile that I was able to write a second one before the first one finished compiling. Now let's look at the ```CompileScript()``` method:
 
-_(Note that_ ```ManaGame``` _is not a typo, as it's the name of my engine's_ ```Game``` _subclass.)_
+_(Note that_ ```ManaGame``` _is not a typo, but the name of my engine's_ ```Game``` _subclass.)_
 
 ```
 private Task<ScriptCompilationResult> CompileScript(string code)
@@ -249,9 +249,9 @@ private Task<ScriptCompilationResult> CompileScript(string code)
 }
 ```
 
-We create and start the task at the same time. Within it, we create the script and delegate in a try-catch block. If it succeeds, we return a new ```ScriptCompilationResult``` with the delegate passed to its constructor. If we got a ```CompilationErrorException```, we pass the exception in instead.
+We create and start the task at the same time. Within it, we create the script and delegate in a try-catch block. If it succeeds, we return a new ```ScriptCompilationResult``` with the delegate passed to its constructor. If we got a ```CompilationErrorException```, we pass the exception into the constructor instead.
 
-Now, we'll check to see if the task is done in an ```Update()``` method on our ```CommandProcessor``` class:
+Now, we'll check to see if the task is done in an ```Update()``` method in our ```CommandProcessor``` class:
 
 ```
 public void Update()
@@ -277,7 +277,7 @@ public void Update()
 
 ```
 
-We exit early if the ```Task``` doesn't exist. If it does, we check if it's completed. If it is, we grab the result, and either invoke the script on our update thread or write the error to the DebugConsole, then set ```_compilationResult``` to null so that we can send more commands. I'm using a singleton for my globals object, so I pass ```ManaGlobals.Instance``` into the delegate invocation. 
+We exit early if the ```Task``` doesn't exist. If it does, we check if it's completed. If it is, we grab the result, and either invoke the script on our update thread or write the error to the ```DebugConsole```, then set ```_compilationResult``` to null so that we can send more commands. I'm using a singleton for my globals object, so I pass ```ManaGlobals.Instance``` into the delegate invocation. 
 
 Here's my globals class:
 
