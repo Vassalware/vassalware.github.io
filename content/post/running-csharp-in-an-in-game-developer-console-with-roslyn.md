@@ -310,7 +310,7 @@ You can set initial values for members of this ```Variables``` object anywhere i
 
 <br/>
 
-There's one final thing you might want. If you want to be able to output the returned value of your script (if there is one) like a REPL, our ```Script.Invoke()``` call returns a ```Task<object>```. We can just capture that object and write it to the console if it's not null:
+There's one final thing you might want. If you want to be able to output the returned value of your script (if there is one) like a REPL, our ```Script.Invoke()``` call returns a ```Task<object>```. We can just store that task's result and write it to the console if it's not null:
 
 ```
 var returnedValue = scriptResult.Script.Invoke(ManaGlobals.Instance).Result;
