@@ -310,6 +310,19 @@ You can set initial values for members of this ```Variables``` object anywhere i
 
 <br/>
 
+There's one final thing you might want. If you want to be able to output the returned value of your script (if there is one) like a REPL, our ```Script.Invoke()``` call returns a ```Task<object>```. We can just capture that object and write it to the console if it's not null:
+
+```
+var returnedValue = scriptResult.Script.Invoke(ManaGlobals.Instance).Result;
+
+if (returnedValue != null)
+{
+	Console.WriteLine(returnedValue.ToString());
+}
+```
+
+<br/>
+
 ## Conclusion
 
 Thanks for making it this far! This is my first post, so there's a decent change that I've explained too much of what's obvious and not enough of what isn't. Feel free to comment down below or email me if you have any feedback.
@@ -324,7 +337,7 @@ Final notes:
 
 * I also have a custom ```TextWriter``` set for ```System.Console``` so that calling ```Console.WriteLine``` writes to my in-game developer console.
 
-* Check out the [**Roslyn Scripting API samples**](https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples) on github. These can teach you how to expand our implementation to write the return type of your script to the console (like a REPL), or be able to declare variables in your console e.g. ```var myInt = 10;``` and retain them in subsequent calls.
+* Check out the [**Roslyn Scripting API samples**](https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples) on github. This page has enough information to teach you how to expand our implementation to be able to declare variables in your console e.g. ```var myInt = 10;``` and retain them in subsequent calls.
 
 * The Scripting API does add quite a few dependencies to your project. If you're only using the console as a dev-tool and don't plan on shipping it with your game, you'll want to only reference the dependencies in the ```DEBUG``` configuration, and use ```#if DEBUG``` when you use them.
 
