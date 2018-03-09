@@ -233,8 +233,8 @@ private Task<ScriptCompilationResult> CompileScript(string code)
                 code: code,
                 options: ScriptOptions.Default
                     .WithReferences(
-                        typeof(Game).Assembly,					  // MonoGame Assembly
-                        typeof(ManaGame).Assembly,				  // My Assembly
+                        typeof(Game).Assembly,                    // MonoGame Assembly
+                        typeof(ManaGame).Assembly,                // My Assembly
                         typeof(RuntimeBinderException).Assembly)  // Required for 'dynamic'
                     .WithImports(
                         "System",
@@ -259,23 +259,23 @@ Now, we'll check to see if the task is done in an ```Update()``` method in our `
 ```
 public void Update()
 {
-	if (_compilationResult == null) return;
+    if (_compilationResult == null) return;
 
-	if (_compilationResult.IsCompleted)
-	{
-		var scriptResult = _compilationResult.Result;
-		
-		if (scriptResult.Success)
-		{
-			scriptResult.Script.Invoke(ManaGlobals.Instance);
-		}
-		else
-		{
-			DebugConsole.Write($"Error: {scriptResult.Exception.Message}\n", Color.Red);
-		}
+    if (_compilationResult.IsCompleted)
+    {
+        var scriptResult = _compilationResult.Result;
+        
+        if (scriptResult.Success)
+        {
+            scriptResult.Script.Invoke(ManaGlobals.Instance);
+        }
+        else
+        {
+            DebugConsole.Write($"Error: {scriptResult.Exception.Message}\n", Color.Red);
+        }
 
-		_compilationResult = null;
-	}
+        _compilationResult = null;
+    }
 }
 
 ```
@@ -287,10 +287,10 @@ Here's my globals class:
 ```
 public class ManaGlobals
 {
-	public static ManaGlobals Instance => _instance ?? (_instance = new ManaGlobals());
-	private static ManaGlobals _instance;
+    public static ManaGlobals Instance => _instance ?? (_instance = new ManaGlobals());
+    private static ManaGlobals _instance;
 
-	public dynamic Variables { get; } = new ExpandoObject();
+    public dynamic Variables { get; } = new ExpandoObject();
 }
 ```
 
@@ -317,7 +317,7 @@ var returnedValue = scriptResult.Script.Invoke(ManaGlobals.Instance).Result;
 
 if (returnedValue != null)
 {
-	Console.WriteLine(returnedValue.ToString());
+    Console.WriteLine(returnedValue.ToString());
 }
 ```
 
