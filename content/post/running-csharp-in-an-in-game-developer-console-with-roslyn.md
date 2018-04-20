@@ -156,19 +156,19 @@ To hook this up to a developer console in-game, we need to parse the input strin
 ```
 public class CommandProcessor
 {
-	public DebugConsole DebugConsole { get; }
+    public DebugConsole DebugConsole { get; }
 
-	public CommandProcessor(DebugConsole debugConsole)
-	{
-		DebugConsole = debugConsole;
-	}
+    public CommandProcessor(DebugConsole debugConsole)
+    {
+        DebugConsole = debugConsole;
+    }
 
-	public void ParseInput(string input)
-	{
-		DebugConsole.Write($">{input}\n", textColor: Color.LightGreen, userInput: true);
+    public void ParseInput(string input)
+    {
+        DebugConsole.Write($">{input}\n", textColor: Color.LightGreen, userInput: true);
 
-		// Here is where we'll run our input as a script.
-	}
+        // Here is where we'll run our input as a script.
+    }
 }
 ```
 
@@ -206,15 +206,15 @@ public void ParseInput(string input)
 {
     DebugConsole.Write($">{input}\n", Color.LightGreen, userInput: true);
 
-    if (_compilationResult != null)
-	{
-		// We'll make this method in a moment.
-		_compilationResult = CompileScript(input);
-	}
-	else
-	{
-		DebugConsole.Write("Error: Compilation in progress.\n", Color.Red);
-	}
+    if (_compilationResult == null)
+    {
+        // We'll make this method in a moment.
+        _compilationResult = CompileScript(input);
+    }
+    else
+    {
+        DebugConsole.Write("Error: Compilation in progress.\n", Color.Red);
+    }
 }
 ```
 
