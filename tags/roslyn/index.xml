@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Roslyn on Vassalware</title>
+    <link>https://vassalware.github.io/tags/roslyn/</link>
+    <description>Recent content in Roslyn on Vassalware</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 04 Mar 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://vassalware.github.io/tags/roslyn/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Running C# in an in-game Developer Console with Roslyn</title>
+      <link>https://vassalware.github.io/post/running-csharp-in-an-in-game-developer-console-with-roslyn/</link>
+      <pubDate>Sun, 04 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://vassalware.github.io/post/running-csharp-in-an-in-game-developer-console-with-roslyn/</guid>
+      <description>Introduction When testing things during game development, it&amp;rsquo;s common to write temporary code that executes on a button press. (e.g., &amp;ldquo;When I press F1, call SpawnEnemy(Input.MousePosition);.&amp;rdquo;) This can be difficult to parameterize, however. If your SpawnEnemy method takes in more than just a location, such as an enum for your enemy type or an int for its level, you&amp;rsquo;ll need to either change the hard-coded values in the method call (hopefully with edit-and-continue) or pass in variables and create a UI to change them at runtime.</description>
+    </item>
+    
+  </channel>
+</rss>

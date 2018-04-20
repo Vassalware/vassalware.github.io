@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        
+<meta name="title" content="Running C# in an in-game Developer Console with Roslyn">
+<meta property="og:title" content="Running C# in an in-game Developer Console with Roslyn" />
+
+
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://vassalware.github.io/post/running-csharp-in-an-in-game-developer-console-with-roslyn/" />
+
+
+<meta property="og:image" content="https://vassalware.github.io/images/console_anim.gif" />
+
+
+
+<meta name="description" content="Supercharge your in-game developer console with C# scripting! Using the Roslyn Scripting API, we&#39;ll turn a string of C# code into an invocable delegate in just one line. Then, we&#39;ll go further and compile our C# commands asynchronously, then invoke them on the update thread.">
+<meta property="og:description" content="Supercharge your in-game developer console with C# scripting! Using the Roslyn Scripting API, we&#39;ll turn a string of C# code into an invocable delegate in just one line. Then, we&#39;ll go further and compile our C# commands asynchronously, then invoke them on the update thread.">
+
+
+<meta name="author" content="Vassalware">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Running C# in an in-game Developer Console with Roslyn</title>
+        <style>
+
+    html body {
+        font-family: 'Raleway', sans-serif;
+        background-color: white;
+    }
+
+    :root {
+        --accent: red;
+        --border-width:  5px ;
+    }
+
+</style>
+
+
+<link rel="stylesheet" href="https://vassalware.github.io/css/main.css">
+
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+
+
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/agate.min.css"> 
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+ 
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/C#.min.js"></script> 
+
+    <script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<script>$(document).on('click', function() { $('.collapse').collapse('hide'); })</script>
+ <meta name="generator" content="Hugo 0.37" />
+        
+        
+        
+    </head>
+
+    
+    
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    
+
+    <body>
+         
+        <nav class="navbar navbar-default navbar-fixed-top">
+
+            <div class="container">
+
+                <div class="navbar-header">
+
+                    <a class="navbar-brand visible-xs" href="#">Running C# in an in-game Developer Console with Roslyn</a>
+
+                    <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+
+                </div>
+
+                <div class="collapse navbar-collapse">
+
+                    
+                        <ul class="nav navbar-nav">
+                            
+                                <li><a href="/">Home</a></li>
+                            
+                                <li><a href="/post/">Posts</a></li>
+                            
+                                <li><a href="/project/">Projects</a></li>
+                            
+                        </ul>
+                    
+
+                    
+                        <ul class="nav navbar-nav navbar-right">
+                            
+                                <li class="navbar-icon"><a href="mailto:vassalware@gmail.com"><i class="fa fa-envelope-o"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://github.com/vassalware/"><i class="fa fa-github"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://twitter.com/vassalware/"><i class="fa fa-twitter"></i></a></li>
+                            
+                                <li class="navbar-icon"><a href="https://www.stackoverflow.com/vassalware/"><i class="fa fa-stack-overflow"></i></a></li>
+                            
+                        </ul>
+                    
+
+                </div>
+
+            </div>
+
+        </nav>
+
+
+<main>
+
+    <div class="item">
+
+    
+    
+    
+
+    
+      
+
+    <h4><a href="/post/running-csharp-in-an-in-game-developer-console-with-roslyn/">Running C# in an in-game Developer Console with Roslyn</a></h4>
+    <h5>Supercharge your in-game developer console with C# scripting! Using the Roslyn Scripting API, we&#39;ll turn a string of C# code into an invocable delegate in just one line. Then, we&#39;ll go further and compile our C# commands asynchronously, then invoke them on the update thread.</h5>
+    
+    <a href="https://vassalware.github.io/tags/c"><kbd class="item-tag">C#</kbd></a>
+    
+    <a href="https://vassalware.github.io/tags/game-dev"><kbd class="item-tag">game-dev</kbd></a>
+    
+    <a href="https://vassalware.github.io/tags/roslyn"><kbd class="item-tag">roslyn</kbd></a>
+    
+    <a href="https://vassalware.github.io/tags/scripting"><kbd class="item-tag">scripting</kbd></a>
+    
+
+</div>
+
+
+    <br> <div class="text-justify">
+
+<p><img src="/images/console_anim.gif#center-border" alt="Example image" /></p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>When testing things during game development, it&rsquo;s common to write temporary code that executes on a button press. (e.g., <em>&ldquo;When I press F1, call <code>SpawnEnemy(Input.MousePosition);</code>.&rdquo;</em>) This can be difficult to parameterize, however. If your <code>SpawnEnemy</code> method takes in more than just a location, such as an enum for your enemy type or an int for its level, you&rsquo;ll need to either change the hard-coded values in the method call (hopefully with <a href="https://www.youtube.com/watch?v=mfJEug3Y8ss"><strong>edit-and-continue</strong></a>) or pass in variables and create a UI to change them at runtime.</p>
+
+<p>Fast-forward along in development and you may have dozens of these utility functions to manipulate your levels or game objects to test things out, and it can become increasingly inconvenient to maintain a way of calling them all at runtime from different key-presses.</p>
+
+<p><br/></p>
+
+<h2 id="developer-console">Developer Console</h2>
+
+<p>You&rsquo;ve probably seen plenty of developer consoles in games, usually designed to mimic standard command-line interfaces. You execute commands by writing the name of the command, followed by any parameters it may take, separated by spaces.</p>
+
+<pre><code>// Spawn a level 4 Zombie at (200, 200)
+&gt; SpawnEnemy Zombie 200 200 4
+
+// or spawn a level 4 Zombie at the mouse position
+&gt; SpawnEnemyAtMouse Zombie 4
+</code></pre>
+
+<p>These are pretty simple to implement: split the input line along the <code>' '</code> character, and search a <code>Dictionary&lt;string, IConsoleCommand&gt;</code> using your first element in your array of splits. The rest of those elements are your command&rsquo;s parameters. If your command has some way of defining what types it expects its parameters as, you can even parse the strings into those types before sending them to the command!</p>
+
+<h6 id="there-s-a-good-implementation-of-this-type-of-console-here-https-github-com-ellisonch-monogameconsole-blob-master-monogameconsole-iconsolecommand-cs-but-it-seems-to-leave-the-parameter-string-parsing-up-to-the-individual-commands"><em>There&rsquo;s a good implementation of this type of console <a href="https://github.com/ellisonch/monogameconsole/blob/master/MonoGameConsole/IConsoleCommand.cs"><strong>here</strong></a>, but it seems to leave the parameter string parsing up to the individual commands.</em></h6>
+
+<p>It&rsquo;s a simple implementation, but a robust one. It&rsquo;s easy to add a command: you create a class that implements an <code>IConsoleCommand</code> interface that defines a Name, its parameters, and an <code>Execute</code> method, and all your operations and logic go inside of that method. Then you just add an instance to the dictionary.</p>
+
+<p>But what if we could write operations and logic <em>directly into the console itself?</em></p>
+
+<p><br/></p>
+
+<h2 id="expressions">Expressions</h2>
+
+<p>I was initially looking for a way to execute commands that could resolve expressions in their parameters. I wanted to be able to write <code>SpawnEnemy Zombie (20 * 10) (20 * (5 + 5)) 4</code>. I thought <em>&ldquo;Okay, maybe I can use <a href="https://github.com/picoe/Eto.Parse"><strong>Eto.Parse</strong></a>, write a simple grammar to give me a syntax tree that I can use to resolve the expression. But if I&rsquo;m writing a grammar, I could change up the syntax. Maybe something like a method call&hellip;&rdquo;</em></p>
+
+<p>I slowly realized that my ideal format for writing commands in an in-game console was <strong>still C#</strong>. Luckily, this is possible with Roslyn. Better yet, it&rsquo;s even more simple than the aforementioned console implementation.</p>
+
+<p><br/></p>
+
+<h2 id="roslyn">Roslyn</h2>
+
+<p>Roslyn&rsquo;s scripting APIs let us execute arbitrary C# code as a &lsquo;script&rsquo;. This means that, like typical scripting languages, we can execute statements without having to place them inside of a method. We can feed C# code from our console into the API and execute it relatively quickly.</p>
+
+<p>To start off, install the scripting API assembly from NuGet:</p>
+
+<pre><code class="language-C#">Install-Package Microsoft.CodeAnalysis.CSharp.Scripting
+</code></pre>
+
+<p><br/></p>
+
+<p>After that, we can get started executing C# code from a string with just one statement:</p>
+
+<pre><code class="language-C#">CSharpScript.Create(&quot;System.Console.WriteLine(\&quot;Hello!\&quot;);&quot;).CreateDelegate().Invoke();
+</code></pre>
+
+<p>That&rsquo;s it! Now, let&rsquo;s break down what&rsquo;s happening:</p>
+
+<p><br/></p>
+
+<p>The <code>Create()</code> call returns a <code>Script&lt;object&gt;</code> object. We&rsquo;ll be using another overload of the <code>Create()</code> method later in order to pass some global variables and methods for our scripts to use. We then call the <code>CreateDelegate()</code> method on the <code>Script&lt;object&gt;</code>, which compiles the Script and returns a delegate that will run it. At this point, it&rsquo;s functionally equivalent to having an <code>Action</code> delegate with <code>System.Console.WriteLine(&quot;Hello!&quot;);</code> inside.</p>
+
+<p><br/></p>
+
+<p>At this point, if you&rsquo;ve tried the code yourself, you may have noticed that it&rsquo;s pretty slow (around 1500 ms on my system). This is because .NET assemblies are lazily loaded, so we&rsquo;re loading <em>quite a few</em> assemblies the first time we call this code. When placed at the start of a fresh console application, this code loads <strong>28</strong> assemblies! While subsequent calls are much faster (around 120 ms on my system), we still don&rsquo;t want our game to lock up for 1500 ms the first time we send a command. Even if we compile the script asynchronously (which we should) so that it doesn&rsquo;t block our game thread, we would still be waiting 1500 ms for our command to be invoked, so this is problematic for us.</p>
+
+<p>Thankfully, there&rsquo;s an easy fix. We can just load the assemblies on another thread while our game is still loading. If it takes 1500 ms to load the assemblies we need, and our game already takes 2000 ms to load, then it&rsquo;s highly likely that they&rsquo;ll be finished loading by the time our game finishes loading. We won&rsquo;t need to invoke the script, just create it and grab its delegate on another thread. Here&rsquo;s the code I use for this:</p>
+
+<pre><code>Task.Run(() =&gt; {
+    CSharpScript.Create(&quot;System.Console.WriteLine();&quot;).CreateDelegate();
+});
+</code></pre>
+
+<p><br/></p>
+
+<h2 id="references-and-globals">References and Globals</h2>
+
+<p>Now that we know how to turn a string into an executable C# delegate, we can look at one of the other overloads for <code>CSharpScript.Create()</code>:</p>
+
+<pre><code>Create(string code, ScriptOptions options, Type globalsType);
+</code></pre>
+
+<p>We know what the <code>code</code> parameter is, so let&rsquo;s look at the others.</p>
+
+<h3 id="options">Options</h3>
+
+<p><code>ScriptOptions</code> is a class that (obviously) contains the options that the script will be run with. This is where we&rsquo;ll specify which assemblies to reference and what namespaces to import. It has an elegant fluent API that we can use:</p>
+
+<pre><code>var scriptOptions = ScriptOptions.Default
+    .WithReferences(typeof(RuntimeBinderException).Assembly)
+    .WithImports(&quot;System&quot;);
+</code></pre>
+
+<p>Here we&rsquo;re creating a ScriptOptions object that is a modified version of <code>ScriptOptions.Default</code>. We modify it to add a reference to the assembly that contains the <code>RuntimeBinderException</code> type (Microsoft.CSharp) so that we can use <code>dynamic</code> objects in our scripts (more on this later). We also import the &ldquo;System&rdquo; namespace so that we can simply write <code>Console.WriteLine</code> in our in-game console.</p>
+
+<h3 id="globalstype">GlobalsType</h3>
+
+<p>The <code>globalsType</code> is a type that we&rsquo;ll be creating. It&rsquo;s members will be globals that we can access directly from our script. Let&rsquo;s make a simple one for now.</p>
+
+<pre><code>public class ConsoleGlobals
+{
+    public int Foo = 100;
+}
+</code></pre>
+
+<p>Let&rsquo;s create a script that uses this type, passing in the ScriptOptions that we created earlier:</p>
+
+<pre><code>var script = CSharpScript.Create(
+    code: &quot;Console.WriteLine(Foo);&quot;,
+    options: scriptOptions,
+    globalsType: typeof(ConsoleGlobals))
+        .CreateDelegate();
+</code></pre>
+
+<p>To use our globals, we&rsquo;re going to need to pass in an object of that type to the <code>Invoke()</code> method on the delegate:</p>
+
+<pre><code>script.Invoke(new ConsoleGlobals()); // Output: 100
+</code></pre>
+
+<p>And it works! And since we&rsquo;re passing in a reference to an object of our globalType, it can be modified by our script as well. If we change our code to <code>Foo = 200;</code>, we can see this:</p>
+
+<pre><code>var globals = new ConsoleGlobals();
+Console.WriteLine(globals.Foo); // Output: 100
+script.Invoke(globals);
+Console.WriteLine(globals.Foo); // Output: 200
+</code></pre>
+
+<p>As you can see, this can be a pretty powerful tool for changing variables on-the-fly.</p>
+
+<p><br /></p>
+
+<h2 id="hooking-it-up-to-an-in-game-console">Hooking it up to an in-game Console</h2>
+
+<p>To hook this up to a developer console in-game, we need to parse the input string as a script whenever we submit it. For this I have a <code>CommandProcessor</code> class that looks something like this:</p>
+
+<pre><code>public class CommandProcessor
+{
+    public DebugConsole DebugConsole { get; }
+
+    public CommandProcessor(DebugConsole debugConsole)
+    {
+        DebugConsole = debugConsole;
+    }
+
+    public void ParseInput(string input)
+    {
+        DebugConsole.Write($&quot;&gt;{input}\n&quot;, textColor: Color.LightGreen, userInput: true);
+
+        // Here is where we'll run our input as a script.
+    }
+}
+</code></pre>
+
+<p>The <code>CommandProcessor</code> has a reference to the <code>DebugConsole</code> that created it. <code>DebugConsole</code> is the class that my in-game developer console is implemented in. Whenever we get input to parse (<code>DebugConsole</code> calling our <code>ParseInput</code> method when we press &lsquo;enter&rsquo;), we&rsquo;ll output it back to the console in a light green color before processing it. The &lsquo;userInput&rsquo; bool is used to tell when a line written to the console was user input or not (so that the &lsquo;up&rsquo; arrow can traverse previous lines of input.) How <code>DebugConsole</code> is implemented is unimportant; we&rsquo;re just focusing on processing console commands given to us by it.</p>
+
+<p>At this point, we could just put a call to <code>CSharpScript.Create()</code> with our input string as the code, whatever references and imports we want, and a globals type, but we&rsquo;d like to create the script and delegate on a separate thread so that it doesn&rsquo;t block our update thread. We&rsquo;ll still be outputting our input string in light green immediately, which will help the console feel responsive despite some commands taking ~200 ms to compile and execute. We&rsquo;ll create a <code>ScriptCompilationResult</code> class that our <code>Task</code> will return:</p>
+
+<pre><code>public class ScriptCompilationResult
+{
+    public bool Success { get; }
+    public CompilationErrorException Exception { get; }
+    public ScriptRunner&lt;object&gt; Script { get; }
+
+    public ScriptCompilationResult(ScriptRunner&lt;object&gt; script)
+    {
+        Success = true;
+        Exception = null;
+        Script = script;
+    }
+
+    public ScriptCompilationResult(CompilationErrorException exception)
+    {
+        Success = false;
+        Exception = exception;
+        Script = null;
+    }
+}
+</code></pre>
+
+<p>Then, we&rsquo;ll store a <code>Task&lt;ScriptCompilationResult&gt;</code> private field called <code>_compilationResult</code> in our <code>CommandProcessor</code> class, and use it in our <code>ParseInput()</code> method.</p>
+
+<pre><code>public void ParseInput(string input)
+{
+    DebugConsole.Write($&quot;&gt;{input}\n&quot;, Color.LightGreen, userInput: true);
+
+    if (_compilationResult == null)
+    {
+        // We'll make this method in a moment.
+        _compilationResult = CompileScript(input);
+    }
+    else
+    {
+        DebugConsole.Write(&quot;Error: Compilation in progress.\n&quot;, Color.Red);
+    }
+}
+</code></pre>
+
+<p>If our result already exists (which can only mean that we tried to enter another command while one was still compiling), we&rsquo;ll write an error to the console saying that the compilation is already in progress. A queue would be more robust, but I want to <em>notice</em> if any commands are so slow to compile that I was able to write a second one before the first one finished compiling. Now let&rsquo;s look at the <code>CompileScript()</code> method:</p>
+
+<p><em>(Note that</em> <code>ManaGame</code> <em>is not a typo, but the name of my engine&rsquo;s</em> <code>Game</code> <em>subclass.)</em></p>
+
+<pre><code>private Task&lt;ScriptCompilationResult&gt; CompileScript(string code)
+{
+    return Task.Run(() =&gt;
+    {
+        try
+        {
+            var script = CSharpScript.Create(
+                code: code,
+                options: ScriptOptions.Default
+                    .WithReferences(
+                        typeof(Game).Assembly,                    // MonoGame Assembly
+                        typeof(ManaGame).Assembly,                // My Assembly
+                        typeof(RuntimeBinderException).Assembly)  // Required for 'dynamic'
+                    .WithImports(
+                        &quot;System&quot;,
+                        &quot;Microsoft.Xna.Framework&quot;),
+                globalsType: typeof(ManaGlobals))
+                    .CreateDelegate();
+
+            return new ScriptCompilationResult(script);
+        }
+        catch (CompilationErrorException e)
+        {
+            return new ScriptCompilationResult(e);
+        }
+    });
+}
+</code></pre>
+
+<p>We create and start the task at the same time. Within it, we create the script and delegate in a try-catch block. If it succeeds, we return a new <code>ScriptCompilationResult</code> with the delegate passed to its constructor. If we got a <code>CompilationErrorException</code>, we pass the exception into the constructor instead.</p>
+
+<p>Now, we&rsquo;ll check to see if the task is done in an <code>Update()</code> method in our <code>CommandProcessor</code> class:</p>
+
+<pre><code>public void Update()
+{
+    if (_compilationResult == null) return;
+
+    if (_compilationResult.IsCompleted)
+    {
+        var scriptResult = _compilationResult.Result;
+        
+        if (scriptResult.Success)
+        {
+            scriptResult.Script.Invoke(ManaGlobals.Instance);
+        }
+        else
+        {
+            DebugConsole.Write($&quot;Error: {scriptResult.Exception.Message}\n&quot;, Color.Red);
+        }
+
+        _compilationResult = null;
+    }
+}
+
+</code></pre>
+
+<p>We exit early if the <code>Task</code> doesn&rsquo;t exist. If it does, we check if it&rsquo;s completed. If it is, we grab the result, and either invoke the script on our update thread or write the error to the <code>DebugConsole</code>, then set <code>_compilationResult</code> to null so that we can send more commands. I&rsquo;m using a singleton for my globals object, so I pass <code>ManaGlobals.Instance</code> into the delegate invocation.</p>
+
+<p>Here&rsquo;s my globals class:</p>
+
+<pre><code>public class ManaGlobals
+{
+    public static ManaGlobals Instance =&gt; _instance ?? (_instance = new ManaGlobals());
+    private static ManaGlobals _instance;
+
+    public dynamic Variables { get; } = new ExpandoObject();
+}
+</code></pre>
+
+<p>I use an <code>ExpandoObject</code> for a field called &lsquo;Variables&rsquo;. <code>ExpandoObject</code> is an object that can have members dynamically added at runtime. This means that we can write something like:</p>
+
+<pre><code>Variables.SomeText = &quot;Hello, World!&quot;;
+</code></pre>
+
+<p>and then, on a subsequent call, use the variable:</p>
+
+<pre><code>Console.WriteLine(Variables.SomeText); // Output: Hello, World!
+</code></pre>
+
+<p>You can set initial values for members of this <code>Variables</code> object anywhere in your code. If you&rsquo;re tweaking parameters for your player&rsquo;s jump mechanics, you can initialize some values on <code>Variables</code> when your player is first created, and then reference them in your jump code. Then you&rsquo;re free to change the values in your console and watch the changes get reflected instantly.</p>
+
+<p><br/></p>
+
+<p>There&rsquo;s one final thing you might want. If you want to be able to output the returned value of your script (if there is one) like a REPL, our <code>Script.Invoke()</code> call returns a <code>Task&lt;object&gt;</code>. We can just store that task&rsquo;s result and write it to the console if it&rsquo;s not null:</p>
+
+<pre><code>var returnedValue = scriptResult.Script.Invoke(ManaGlobals.Instance).Result;
+
+if (returnedValue != null)
+{
+    Console.WriteLine(returnedValue.ToString());
+}
+</code></pre>
+
+<p><br/></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Thanks for making it this far! This is my first post, so there&rsquo;s a decent change that I&rsquo;ve explained too much of what&rsquo;s obvious and not enough of what isn&rsquo;t. Feel free to comment down below or email me if you have any feedback.</p>
+
+<p>Here&rsquo;s that gif from the top again:</p>
+
+<p><img src="/images/console_anim.gif#center-border" alt="Example image" /></p>
+
+<p>Final notes:</p>
+
+<ul>
+<li><p>In this gif, I had a <code>Color</code> field on my global type called <code>BackgroundColor</code>. This was before I thought of using an <code>ExpandoObject</code> instead.</p></li>
+
+<li><p>I also have a custom <code>TextWriter</code> set for <code>System.Console</code> so that calling <code>Console.WriteLine</code> writes to my in-game developer console.</p></li>
+
+<li><p>Check out the <a href="https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples"><strong>Roslyn Scripting API samples</strong></a> on github. This page has enough information to teach you how to expand our implementation to be able to declare variables in your console e.g. <code>var myInt = 10;</code> and retain them in subsequent calls.</p></li>
+
+<li><p>The Scripting API does add quite a few dependencies to your project. If you&rsquo;re only using the console as a dev-tool and don&rsquo;t plan on shipping it with your game, you&rsquo;ll want to only reference the dependencies in the <code>DEBUG</code> configuration, and use <code>#if DEBUG</code> when you use them.</p></li>
+
+<li><p>The font I&rsquo;m using is called <a href="https://www.dafont.com/nintendo-ds-bios.font"><strong>Nintendo DS BIOS</strong></a>. It&rsquo;s free for personal use.</p></li>
+</ul>
+</div>
+
+    
+    
+
+    
+
+    
+
+        <h4 class="page-header">Comments</h4>
+
+        <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "vassalware" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    
+
+</main>
+
+        <footer>
+
+            <p class="copyright text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io">Hugo</a> and <a href="https://github.com/calintat/minimal">Minimal</a></p>
+
+        </footer>
+       
+    </body>
+
+</html>
+

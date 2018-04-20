@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Vassalware</title>
+    <link>https://vassalware.github.io/tags/</link>
+    <description>Recent content in Tags on Vassalware</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 04 Mar 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://vassalware.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>C#</title>
+      <link>https://vassalware.github.io/tags/c#/</link>
+      <pubDate>Sun, 04 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://vassalware.github.io/tags/c#/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Game Dev</title>
+      <link>https://vassalware.github.io/tags/game-dev/</link>
+      <pubDate>Sun, 04 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://vassalware.github.io/tags/game-dev/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Roslyn</title>
+      <link>https://vassalware.github.io/tags/roslyn/</link>
+      <pubDate>Sun, 04 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://vassalware.github.io/tags/roslyn/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Scripting</title>
+      <link>https://vassalware.github.io/tags/scripting/</link>
+      <pubDate>Sun, 04 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://vassalware.github.io/tags/scripting/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>
